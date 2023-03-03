@@ -1,0 +1,33 @@
+playervar Trigger[] _watch_triggers=[];
+
+struct Trigger
+{
+    public Button[] toHold;
+    public ()=>void toUse;
+    public Player player;
+
+    public Boolean isTriggerHeld(): b(0, b(1, b(2)));
+    Boolean b(Number i, Boolean next = true): (i >= toHold.Length || (IsButtonHeld(EventPlayer(), toHold[i]) && next));
+}
+
+Boolean triggerHeld(Trigger t): t.toHold.IsTrueForAll(b => IsButtonHeld(EventPlayer(), b));
+Boolean anyTriggersHeld(Trigger[] triggers): triggers.IsTrueForAny(t => t.isTriggerHeld());
+
+Boolean has_triggers():_watch_triggers.Length!=0;
+void add_trigger(in Player p, in Button[] buttonsToHold, in ()=>void cb) { 
+    Trigger t = { toHold: buttonsToHold,toUse: cb, player: p};
+    p._watch_triggers += [t];
+} 
+  
+rule: 'Check players for triggers'
+Event.OngoingPlayer
+if(IsAlive() && has_triggers())
+if(anyTriggersHeld(_watch_triggers))
+{
+    foreach(Trigger t in _watch_triggers) {
+        if (t.isTriggerHeld())
+        {
+            t.toUse();
+        }
+    }
+}
